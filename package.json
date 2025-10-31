@@ -1,0 +1,23 @@
+{
+  "name": "vesting-problem-stage-1",
+  "version": "1.0.0",
+  "description": "Technical assignment design to solve the problem os stock vesting for companies granting stock rewards to employees.",
+  "main": "index.ts",
+  "scripts": {
+    "test": "jest .",
+    "start": "node --import=tsx index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gcarvs/vesting-problem-stage-1.git"
+  },
+  "author": "Gabriel de Carvalho dos Santos",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gcarvs/vesting-problem-stage-1/issues"
+  },
+  "homepage": "https://github.com/gcarvs/vesting-problem-stage-1#readme",
+  "devDependencies": {
+    "tsx": "^4.20.6"
+  }
+}

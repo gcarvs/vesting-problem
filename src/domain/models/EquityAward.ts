@@ -1,5 +1,5 @@
-export type EquityAward = {
+export interface EquityAward {
     awardId: string;
-    date: Date;
-    quantity: number;
+    awardDate: Date;
+    awardedShares: number;
 }

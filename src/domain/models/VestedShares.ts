@@ -1,4 +1,4 @@
-export type VestedShares = {
+export interface VestedShares {
     employeeId: string;
     employeeName: string;
     awardId: string;

@@ -5,8 +5,6 @@ import * as VestingEventModel from "../../src/domain/models//VestingEvent";
 import fs from 'node:fs/promises';
 import { VestedShares } from "../../src/domain/models/VestedShares";
 
-'node:fs/promises'
-
 describe("Test VestingEventsFileRepository", () => {
     const mockVestingEvents: VestingEvent[] = [
         {
@@ -67,7 +65,7 @@ describe("Test VestingEventsFileRepository", () => {
                 quantity: 1000
             };
 
-            let result = repository.converCsvRowToVestingEvent(mockedRow);
+            const result = repository.converCsvRowToVestingEvent(mockedRow);
             
             expect(spyIsValidEventType).toHaveBeenCalledWith("VEST");
             expect(result).toMatchObject(expectedResult);
@@ -185,7 +183,7 @@ describe("Test VestingEventsFileRepository", () => {
             mockVestingEvents.forEach(resultItem => spyConvertCsvRow.mockReturnValueOnce(resultItem));
             mockVestedShares.forEach(resultItem => spyComputeVestedShares.mockReturnValueOnce(resultItem));
 
-            let result = repository.processVestingEventsFile(mockVestingEventsFile, mockTargetDate);
+            const result = repository.processVestingEventsFile(mockVestingEventsFile, mockTargetDate);
 
             expect(spyConvertCsvRow).toHaveBeenCalledTimes(mockVestingEventsFileRows.length);
             expect(spyComputeVestedShares).toHaveBeenCalledTimes(mockVestingEvents.length);
@@ -209,7 +207,7 @@ describe("Test VestingEventsFileRepository", () => {
             spyConvertCsvRow.mockReturnValueOnce(mockVestingEvents[1]); // Only the second event should be expected in this case.
             spyComputeVestedShares.mockReturnValueOnce(computedShares[0]);
 
-            let result = repository.processVestingEventsFile(mockVestingEventsFile, mockTargetDate);
+            const result = repository.processVestingEventsFile(mockVestingEventsFile, mockTargetDate);
 
             expect(spyConvertCsvRow).toHaveBeenCalledTimes(mockVestingEventsFileRows.length);
             expect(spyComputeVestedShares).toHaveBeenCalledTimes(1);

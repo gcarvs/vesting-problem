@@ -78,11 +78,11 @@ export class VestingEventsFileRepository implements VestingEventRepository {
      * @returns {VestingEvent[]} - The formatted list of Vesting Events
      */
     processVestingEventsFile(csvFileContent: string, targetDate: Date): VestedShares[]{
-        let csvRows = csvFileContent.split("\n");
+        const csvRows = csvFileContent.split("\n");
         const vestedSharesTree: BSTree<VestedShares> = new BSTree<VestedShares>(indexByEmployeeAndAward);
         
         csvRows.map(row => {
-            let currentRow = row.split(",");
+            const currentRow = row.split(",");
 
             try{
                 const vestingEvent: VestingEvent = this.converCsvRowToVestingEvent(currentRow);
@@ -109,10 +109,10 @@ export class VestingEventsFileRepository implements VestingEventRepository {
      * @throws {Error} If the event date is not a valid date
      */
     converCsvRowToVestingEvent(csvColumns: string[]): VestingEvent{
-        let [event, employeeId, employeeName, awardId, dateStr, quantityStr] = csvColumns;
+        const [event, employeeId, employeeName, awardId, dateStr, quantityStr] = csvColumns;
         
-        let eventDate: Date = new Date(dateStr);
-        let awardedShares: number = parseInt(quantityStr);
+        const eventDate: Date = new Date(dateStr);
+        const awardedShares: number = parseInt(quantityStr);
 
         if(!isValidEventType(event))
             throw new Error("Error parsing CSV file: the event type should be always 'VEST'");

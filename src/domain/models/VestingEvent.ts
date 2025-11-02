@@ -33,3 +33,18 @@ export class CancelOperation implements VestingEventProcessor {
         return currentBalance;
     };
 }
+
+/**
+ * Defines the correct event processing strategy based on the Vesting Event Type.
+ * 
+ * @param {VestingEventTypes} eventType 
+ * @returns {VestingEventProcessor} - Object capable of processing a Vesting Event
+ */
+export function getVestingEventProcessor(eventType: VestingEventTypes): VestingEventProcessor{
+    const eventOperationMap = {
+        "VEST": new VestOperation(),
+        "CANCEL": new CancelOperation()
+    }
+    
+    return eventOperationMap[eventType];
+}

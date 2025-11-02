@@ -1,4 +1,4 @@
-import { CancelOperation, isValidEventType, VestingEventProcessor, VestingEventTypes, VestOperation, type VestingEvent } from "../domain/models/VestingEvent";
+import { CancelOperation, getVestingEventProcessor, isValidEventType, VestingEventProcessor, VestingEventTypes, VestOperation, type VestingEvent } from "../domain/models/VestingEvent";
 import type { VestingEventRepository } from "../ports/VestingEventRepository";
 
 import { readFile } from 'node:fs/promises';
@@ -44,7 +44,7 @@ export class VestingEventsFileRepository implements VestingEventRepository {
      */
     computeVestedShares(vestingEvent: VestingEvent, targetDate: Date): VestedShares {
         const vestedShareKey: string = vestingEvent.employeeId + vestingEvent.awardId;
-        const eventProcessor: VestingEventProcessor = this.getVestingEventProcessor(vestingEvent.event);
+        const eventProcessor: VestingEventProcessor = getVestingEventProcessor(vestingEvent.event);
 
         // Computes how many shares should be awarded by this event
         const vestedSharesToDate: number = vestingEvent.awardDate <= targetDate ? vestingEvent.quantity : 0;
@@ -66,15 +66,6 @@ export class VestingEventsFileRepository implements VestingEventRepository {
         
         this.vestedSharesCache.set(vestedShareKey, newVestedShare);
         return newVestedShare;
-    }
-    
-    getVestingEventProcessor(eventType: VestingEventTypes): VestingEventProcessor{
-        const eventOperationMap = {
-            "VEST": new VestOperation(),
-            "CANCEL": new CancelOperation()
-        }
-        
-        return eventOperationMap[eventType];
     }
 
     /**

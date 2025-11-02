@@ -1,5 +1,5 @@
-import { VestedShares } from "../../domain/models/VestedShares";
-import { VestingEvent } from "../../domain/models/VestingEvent";
+import { VestedShares } from "../domain/models/VestedShares";
+import { VestingEvent } from "../domain/models/VestingEvent";
 
 /**
  * Binary Search Tree Node

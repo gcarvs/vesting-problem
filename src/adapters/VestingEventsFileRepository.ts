@@ -1,4 +1,4 @@
-import { CancelOperation, getVestingEventProcessor, isValidEventType, VestingEventProcessor, VestingEventTypes, VestOperation, type VestingEvent } from "../domain/models/VestingEvent";
+import { getVestingEventProcessor, isValidEventType, VestingEventProcessor, type VestingEvent } from "../domain/models/VestingEvent";
 import type { VestingEventRepository } from "../ports/VestingEventRepository";
 
 import { readFile } from 'node:fs/promises';

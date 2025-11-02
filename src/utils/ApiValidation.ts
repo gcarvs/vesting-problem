@@ -7,7 +7,8 @@ import * as path from "path";
  * @returns {boolean} - True if the string is a valid filename or false if not
  */
 export function validateFileName(fileName: string): boolean {
-    const rgxForbiddenChars = /^[^\\/:\*\?"<>\|]+$/; // forbidden characters \ / : * ? " < > |
+    // forbidden characters \ / : * ? " < > |
+    const rgxForbiddenChars: RegExp = /^[^\\/:\*\?"<>\|]+$/; //eslint-disable-line
     const allowedExtensions = ['.csv'];
 
     if(!rgxForbiddenChars.test(fileName)) return false;
@@ -23,6 +24,6 @@ export function validateFileName(fileName: string): boolean {
  * @returns {boolean} - True if the string is a valid date or false if not
  */
 export function validateTargetDate(dateString: string): boolean {
-    const dateFormatRegex = /^\d{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/;
+    const dateFormatRegex: RegExp = /^\d{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/;
     return dateFormatRegex.test(dateString);
 }

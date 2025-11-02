@@ -1,5 +1,5 @@
-import type { VestingEvent } from "../domain/models/VestingEvent"
+import { VestedShares } from "../domain/models/VestedShares";
 
 export interface VestingEventRepository {
-    getVestingEvents(): Promise<VestingEvent[]>;
+    getSharesVestedByTargetDate(targetDate: Date): Promise<VestedShares[]>;
 }

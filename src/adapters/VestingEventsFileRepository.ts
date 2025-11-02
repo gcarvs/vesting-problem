@@ -2,17 +2,19 @@ import { isValidEventType, type VestingEvent } from "../domain/models/VestingEve
 import type { VestingEventRepository } from "../ports/VestingEventRepository";
 
 import { readFile } from 'node:fs/promises';
-import { indexByEventDate, VestingEventsTree } from "./helpers/VestingEventsTree";
+import { indexByEmployeeAndAward, BSTree } from "./helpers/VestingEventsTree";
+import { VestedShares } from "../domain/models/VestedShares";
 
 /**
  * Repository used to consume VestingEvent data from a CSV file.
  */
 export class VestingEventsFileRepository implements VestingEventRepository {
     fileName: string;
-    vestingEventsTree: VestingEventsTree;
+    vestedSharesCache: Map<string, VestedShares>;
     
     constructor(fileName: string){
         this.fileName = fileName;
+        this.vestedSharesCache = new Map<string, VestedShares>();
     }
 
     /**
@@ -20,10 +22,13 @@ export class VestingEventsFileRepository implements VestingEventRepository {
      * 
      * @returns {Promise<VestingEvent[]>} - A list of Vesting Events read from a CSV file
      */
-    async getVestingEvents(): Promise<VestingEvent[]> {
+    async getSharesVestedByTargetDate(targetDate: Date): Promise<VestedShares[]> {
         try {
             const fileContent = await readFile(this.fileName, { encoding: 'utf8' });
-            return this.processVestingEventsFile(fileContent);
+
+            const vestingEventsList = this.processVestingEventsFile(fileContent, targetDate);
+
+            return vestingEventsList;
         } catch (err) {
             console.error(`Error reading Vesting Events History file: `, err);
             return [];
@@ -31,29 +36,66 @@ export class VestingEventsFileRepository implements VestingEventRepository {
     }
 
     /**
+     * 
+     * @param vestingEvent 
+     * @param targetDate 
+     * @returns 
+     */
+    computeVestedShares(vestingEvent: VestingEvent, targetDate: Date): VestedShares {
+        const vestedShareKey: string = vestingEvent.employeeId + vestingEvent.awardId;
+
+        // Computes how many shares should be awarded by this event
+        const vestedSharesToDate: number = vestingEvent.awardDate <= targetDate ? vestingEvent.quantity : 0;
+
+        const savedVestedShare: VestedShares = this.vestedSharesCache.get(vestedShareKey);
+
+        // If we already have computed vested shares for this Employee + Award
+        if(savedVestedShare){
+            savedVestedShare.awardedShares += vestedSharesToDate;
+            return savedVestedShare;
+        }
+        
+        const newVestedShare: VestedShares = {
+            employeeId: vestingEvent.employeeId,
+            employeeName: vestingEvent.employeeName,
+            awardId: vestingEvent.awardId,
+            awardedShares: vestedSharesToDate
+        }
+        
+        this.vestedSharesCache.set(vestedShareKey, newVestedShare);
+        return newVestedShare;
+    }
+    
+
+    /**
      * Break down the file content into rows and process each one as a VestingEvent.
      * 
      * Any invalid rows are dropped and the process continues.
      * 
+     * Returns the list ordered by date.
+     * 
      * @param {string} csvFileContent - The raw content from the Vesting Events CSV file
      * @returns {VestingEvent[]} - The formatted list of Vesting Events
      */
-    processVestingEventsFile(csvFileContent: string): VestingEvent[]{
+    processVestingEventsFile(csvFileContent: string, targetDate: Date): VestedShares[]{
         let csvRows = csvFileContent.split("\n");
-        this.vestingEventsTree = new VestingEventsTree(indexByEventDate);
+        const vestedSharesTree: BSTree<VestedShares> = new BSTree<VestedShares>(indexByEmployeeAndAward);
         
         csvRows.map(row => {
             let currentRow = row.split(",");
 
             try{
-                this.vestingEventsTree.insert(this.converCsvRowToVestingEvent(currentRow));
+                const vestingEvent: VestingEvent = this.converCsvRowToVestingEvent(currentRow);
+                const vestedShares: VestedShares = this.computeVestedShares(vestingEvent, targetDate);
+
+                vestedSharesTree.insert(vestedShares);
             }
             catch(error){
                 console.log(`Row dropped from Vesting Events History: ${error}`);
             }
         });
         
-        return this.vestingEventsTree.traverse();
+        return vestedSharesTree.traverse();
     }
 
     /**
@@ -88,7 +130,7 @@ export class VestingEventsFileRepository implements VestingEventRepository {
             employeeName: employeeName,
             awardId: awardId,
             awardDate: eventDate,
-            awardedShares: awardedShares
+            quantity: awardedShares
         };
     }
 }

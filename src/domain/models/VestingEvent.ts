@@ -1,4 +1,4 @@
-const validEventTypes = ["VEST"] as const;
+const validEventTypes = ["VEST", "CANCEL"] as const;
 
 export type VestingEventTypes = typeof validEventTypes[number];
 
@@ -13,4 +13,23 @@ export interface VestingEvent {
     awardId: string;
     awardDate: Date;
     quantity: number;
+}
+
+export interface VestingEventProcessor {
+    processVestingEvent(currentBalance: number, eventQuantity: number): number;
+}
+
+export class VestOperation implements VestingEventProcessor {
+    processVestingEvent(currentBalance: number, eventQuantity: number): number {
+        return currentBalance + eventQuantity;
+    };
+}
+
+export class CancelOperation implements VestingEventProcessor {
+    processVestingEvent(currentBalance: number, eventQuantity: number): number {
+        if(currentBalance >= eventQuantity)
+            return currentBalance - eventQuantity;
+
+        return currentBalance;
+    };
 }

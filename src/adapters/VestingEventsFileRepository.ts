@@ -1,4 +1,4 @@
-import { isValidEventType, type VestingEvent } from "../domain/models/VestingEvent";
+import { CancelOperation, isValidEventType, VestingEventProcessor, VestingEventTypes, VestOperation, type VestingEvent } from "../domain/models/VestingEvent";
 import type { VestingEventRepository } from "../ports/VestingEventRepository";
 
 import { readFile } from 'node:fs/promises';
@@ -36,13 +36,15 @@ export class VestingEventsFileRepository implements VestingEventRepository {
     }
 
     /**
+     * Computes the result of the Vesting Event to the Employee balance considering the target date and the Vesting Event Type (VEST or CANCEL)
      * 
-     * @param vestingEvent 
-     * @param targetDate 
-     * @returns 
+     * @param {VestingEvent} vestingEvent - The vesting event being computed
+     * @param {Date} targetDate - Only events that happened until this date will be considered
+     * @returns {VestedShares} - The vested shares for that Employee + Award after the event
      */
     computeVestedShares(vestingEvent: VestingEvent, targetDate: Date): VestedShares {
         const vestedShareKey: string = vestingEvent.employeeId + vestingEvent.awardId;
+        const eventProcessor: VestingEventProcessor = this.getVestingEventProcessor(vestingEvent.event);
 
         // Computes how many shares should be awarded by this event
         const vestedSharesToDate: number = vestingEvent.awardDate <= targetDate ? vestingEvent.quantity : 0;
@@ -51,7 +53,7 @@ export class VestingEventsFileRepository implements VestingEventRepository {
 
         // If we already have computed vested shares for this Employee + Award
         if(savedVestedShare){
-            savedVestedShare.awardedShares += vestedSharesToDate;
+            savedVestedShare.awardedShares = eventProcessor.processVestingEvent(savedVestedShare.awardedShares, vestedSharesToDate);
             return savedVestedShare;
         }
         
@@ -59,13 +61,21 @@ export class VestingEventsFileRepository implements VestingEventRepository {
             employeeId: vestingEvent.employeeId,
             employeeName: vestingEvent.employeeName,
             awardId: vestingEvent.awardId,
-            awardedShares: vestedSharesToDate
+            awardedShares: eventProcessor.processVestingEvent(0, vestedSharesToDate)
         }
         
         this.vestedSharesCache.set(vestedShareKey, newVestedShare);
         return newVestedShare;
     }
     
+    getVestingEventProcessor(eventType: VestingEventTypes): VestingEventProcessor{
+        const eventOperationMap = {
+            "VEST": new VestOperation(),
+            "CANCEL": new CancelOperation()
+        }
+        
+        return eventOperationMap[eventType];
+    }
 
     /**
      * Break down the file content into rows and process each one as a VestingEvent.

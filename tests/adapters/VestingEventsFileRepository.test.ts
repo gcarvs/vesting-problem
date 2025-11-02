@@ -169,11 +169,11 @@ describe("Test VestingEventsFileRepository", () => {
     describe("test processVestingEventsFile function", () => {
         const repository: VestingEventsFileRepository = new VestingEventsFileRepository("test_file.csv");
         const spyConvertCsvRow = jest.spyOn(repository, "converCsvRowToVestingEvent");
-        const spyComputeVestedShares = jest.spyOn(repository, "computeVestedShares");
+        const spyProcessVestingEvents = jest.spyOn(repository, "processVestingEvents");
 
         beforeEach(() => {
             spyConvertCsvRow.mockClear();
-            spyComputeVestedShares.mockClear();
+            spyProcessVestingEvents.mockClear();
         });
 
         test("test for all valid rows", () => {
@@ -181,13 +181,13 @@ describe("Test VestingEventsFileRepository", () => {
             const mockVestingEventsFile: string = mockVestingEventsFileRows.join("\n");
             
             mockVestingEvents.forEach(resultItem => spyConvertCsvRow.mockReturnValueOnce(resultItem));
-            mockVestedShares.forEach(resultItem => spyComputeVestedShares.mockReturnValueOnce(resultItem));
+            spyProcessVestingEvents.mockReturnValueOnce(mockVestedShares);
 
             const result = repository.processVestingEventsFile(mockVestingEventsFile, mockTargetDate);
 
             expect(spyConvertCsvRow).toHaveBeenCalledTimes(mockVestingEventsFileRows.length);
-            expect(spyComputeVestedShares).toHaveBeenCalledTimes(mockVestingEvents.length);
-            expect(result).toMatchObject([mockVestedShares[1]]);
+            expect(spyProcessVestingEvents).toHaveBeenCalledWith(mockVestingEvents, mockTargetDate);
+            expect(result).toMatchObject(mockVestedShares);
         });
 
         test("test for some invalid rows", () => {
@@ -205,13 +205,26 @@ describe("Test VestingEventsFileRepository", () => {
 
             spyConvertCsvRow.mockImplementationOnce(() => { throw new Error("Error processing file!") });
             spyConvertCsvRow.mockReturnValueOnce(mockVestingEvents[1]); // Only the second event should be expected in this case.
-            spyComputeVestedShares.mockReturnValueOnce(computedShares[0]);
+            spyProcessVestingEvents.mockReturnValueOnce([computedShares[0]]);
 
             const result = repository.processVestingEventsFile(mockVestingEventsFile, mockTargetDate);
 
             expect(spyConvertCsvRow).toHaveBeenCalledTimes(mockVestingEventsFileRows.length);
-            expect(spyComputeVestedShares).toHaveBeenCalledTimes(1);
+            expect(spyProcessVestingEvents).toHaveBeenCalledWith([mockVestingEvents[1]], mockTargetDate);
             expect(result).toMatchObject(computedShares);
+        });
+    });
+
+    describe("test processVestingEvents function", () => {
+        test("test for success case", () => {
+            const repository: VestingEventsFileRepository = new VestingEventsFileRepository("test_file.csv");
+            const spyComputeVestedShares = jest.spyOn(repository, "computeVestedShares");
+
+            mockVestingEvents.forEach((event, index) => spyComputeVestedShares.mockReturnValueOnce(mockVestedShares[index]));
+
+            const result = repository.processVestingEvents(mockVestingEvents, mockTargetDate);
+            expect(spyComputeVestedShares).toHaveBeenCalledTimes(mockVestingEvents.length);
+            expect(result).toMatchObject([mockVestedShares[1]]);
         });
     });
 

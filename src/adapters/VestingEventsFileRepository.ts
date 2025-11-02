@@ -2,7 +2,7 @@ import { CancelOperation, getVestingEventProcessor, isValidEventType, VestingEve
 import type { VestingEventRepository } from "../ports/VestingEventRepository";
 
 import { readFile } from 'node:fs/promises';
-import { indexByEmployeeAndAward, BSTree } from "./helpers/VestingEventsTree";
+import { indexByEmployeeAndAward, BSTree, indexByDateAndEvent } from "./helpers/VestingEventsTree";
 import { VestedShares } from "../domain/models/VestedShares";
 
 /**
@@ -48,7 +48,6 @@ export class VestingEventsFileRepository implements VestingEventRepository {
 
         // Computes how many shares should be awarded by this event
         const vestedSharesToDate: number = vestingEvent.awardDate <= targetDate ? vestingEvent.quantity : 0;
-
         const savedVestedShare: VestedShares = this.vestedSharesCache.get(vestedShareKey);
 
         // If we already have computed vested shares for this Employee + Award
@@ -80,22 +79,42 @@ export class VestingEventsFileRepository implements VestingEventRepository {
      */
     processVestingEventsFile(csvFileContent: string, targetDate: Date): VestedShares[]{
         const csvRows = csvFileContent.split("\n");
-        const vestedSharesTree: BSTree<VestedShares> = new BSTree<VestedShares>(indexByEmployeeAndAward);
+        
+        // Indexing the file by Date and Event will make sure to process VEST before CANCEL
+        const vestedSharesTree: BSTree<VestingEvent> = new BSTree<VestingEvent>(indexByDateAndEvent);
         
         csvRows.map(row => {
             const currentRow = row.split(",");
 
             try{
                 const vestingEvent: VestingEvent = this.converCsvRowToVestingEvent(currentRow);
-                const vestedShares: VestedShares = this.computeVestedShares(vestingEvent, targetDate);
-
-                vestedSharesTree.insert(vestedShares);
+                vestedSharesTree.insert(vestingEvent);
             }
             catch(error){
                 console.log(`Row dropped from Vesting Events History: ${error}`);
             }
         });
-        
+
+        const orderedEvents: VestingEvent[] = vestedSharesTree.traverse();
+        return this.processVestingEvents(orderedEvents, targetDate);
+    }
+
+    /**
+     * Process an ordered list of Vesting Events into summary VestedShares.
+     * 
+     * It also uses a BST to ensure keep the result already in order.
+     * 
+     * @param {VestingEvent} orderedEvents - An ordered list of events by Date and Event Type
+     * @param {Date} targetDate - The target date to calculate the events
+     * @returns {VestedShares[]} - The summarized list of VestedShares until the Target Date
+     */
+    processVestingEvents(orderedEvents: VestingEvent[], targetDate: Date): VestedShares[]{
+        const vestedSharesTree: BSTree<VestedShares> = new BSTree<VestedShares>(indexByEmployeeAndAward);
+
+        orderedEvents.forEach(event => {
+            vestedSharesTree.insert(this.computeVestedShares(event, targetDate));
+        });
+
         return vestedSharesTree.traverse();
     }
 

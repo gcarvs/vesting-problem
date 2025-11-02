@@ -1,4 +1,5 @@
 import { VestedShares } from "../../domain/models/VestedShares";
+import { VestingEvent } from "../../domain/models/VestingEvent";
 
 /**
  * Binary Search Tree Node
@@ -16,7 +17,7 @@ class BSTNode<T> {
 }
 
 /**
- * Compares two T based on their Employee Ids and Award Ids.
+ * Compares two VestedShares based on their Employee Ids and Award Ids.
  * 
  * @param valueA 
  * @param valueB 
@@ -28,6 +29,21 @@ export const indexByEmployeeAndAward = (valueA: VestedShares, valueB: VestedShar
     if (employeeIdCompare !== 0) return employeeIdCompare;
 
     return valueA.awardId.localeCompare(valueB.awardId);
+};
+
+/**
+ * Compares two VestingEvent based on their event date and event type.
+ * 
+ * @param valueA 
+ * @param valueB 
+ * @returns {number} - Return -1 if A < B, 1 if A > B or 0 if they happened on the same date
+ */
+export const indexByDateAndEvent = (valueA: VestingEvent, valueB: VestingEvent) => {
+    if(valueA.awardDate.getTime() === valueB.awardDate.getTime()){
+        return valueA.event === "CANCEL" ? 1 : -1;
+    }
+
+    return valueA.awardDate.getTime() - valueB.awardDate.getTime();
 };
 
 /**
@@ -63,7 +79,7 @@ export class BSTree<T> {
      * @returns {BSTNode} - The node where the new value was inserted
      */
     private insertNode(newValue: T, node?: BSTNode<T>): BSTNode<T> {
-        // Base case for when the tree is empty
+        // Create a new leaf
         if (!node) {
             return new BSTNode(newValue);
         }

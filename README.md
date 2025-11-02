@@ -1,4 +1,4 @@
-# Vesting Problem - Stage 1
+# Vesting Problem
 Technical assignment design to solve the problem os stock vesting for companies granting stock rewards to employees.
 
 When a company grants an equity award (shares) to an employee, it usually has to vest before you can do anything with it. This vesting usually occurs in increments over a period of time, encouraging recipients to stay longer at the company. 

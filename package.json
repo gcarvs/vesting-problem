@@ -1,5 +1,5 @@
 {
-  "name": "vesting-problem-stage-1",
+  "name": "vesting-problem",
   "version": "1.0.0",
   "description": "Technical assignment design to solve the problem os stock vesting for companies granting stock rewards to employees.",
   "main": "index.ts",

@@ -23,7 +23,7 @@ A vesting schedule defines how much total equity has been vested over a time. In
 
 This program expects a CSV file with the history of vesting events. The file should follow the convention:
 
-<<VESTING_EVENT>>,<<EMPLOYEE ID>>,<<EMPLOYEE NAME>>,<<AWARD ID>>,<<DATE>>,<<QUANTITY>>
+<VESTING_EVENT>,<EMPLOYEE_ID>,<EMPLOYEE_NAME>,<AWARD_ID>,<DATE>,<QUANTITY>
 
 A few observations about the properties:
 - VESTING_EVENT: Should have the value VEST for vesting events or CANCEL for cancellation events.

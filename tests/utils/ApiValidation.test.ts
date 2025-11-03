@@ -20,7 +20,7 @@ describe("test API Validations", () => {
     });
 
     describe("test validateTargetDate", () => {
-        describe("test multiple scenarios", () => {
+        test("test multiple scenarios", () => {
             const invalidString1: string = "10-06-2025";
             const invalidString2: string = "10/06/2025";
             const invalidString3: string = "2025/06/10";
